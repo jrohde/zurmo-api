@@ -1,0 +1,24 @@
+{
+    "name": "jrohde/zurmo-api",
+    "description": "Zurmo API Helper class",
+    "keywords": ["zurmo", "api", "crm", "class"],
+    "homepage": "https://github.com/jrohde/zurmo-api-helper-class",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Joost Rohde",
+            "email": "j.rohde@nederlandlive.nl",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": ">=7.0.0",
+    },
+    "require-dev": {
+    },
+    "autoload": {
+        "psr-0": {
+            "Zurmo\\": "src/"
+        }
+    }
+}
