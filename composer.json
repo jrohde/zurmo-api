@@ -1,6 +1,6 @@
 {
     "name": "jrohde/zurmo-api",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "Zurmo API Helper class",
     "keywords": ["zurmo", "api", "crm", "class"],
     "homepage": "https://github.com/jrohde/zurmo-api-helper-class",
@@ -18,7 +18,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Zurmo": "src/"
+            "Zurmo\\": "src/"
         }
     }
 }
