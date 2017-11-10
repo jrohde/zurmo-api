@@ -27,8 +27,7 @@ class Rest extends Api
     {
         $endpoint   = '/app/index.php/'.$model_1.'/'.$model_2.'/api/create/';
         $type       = 'POST';
-        $result     = $this->query($endpoint, $type, $data);
-        return $result;
+        return $this->query($endpoint, $type, $data);
     }
 
     public function read($id, $model_1, $model_2)
@@ -36,8 +35,7 @@ class Rest extends Api
         $endpoint   = '/app/index.php/'.$model_1.'/'.$model_2.'/api/read/'.$id;
         $type       = 'GET';
         $data       = null;
-        $result     = $this->query($endpoint, $type, $data);
-        return $result;
+        return $this->query($endpoint, $type, $data);
     }
 
     public function update($id, $model_1, $model_2)
@@ -45,8 +43,7 @@ class Rest extends Api
         $endpoint   = '/app/index.php/'.$model_1.'/'.$model_2.'/api/update/'.$id;
         $type       = 'PUT';
         $data       = null;
-        $result     = $this->query($endpoint, $type, $data);
-        return $result;
+        return $this->query($endpoint, $type, $data);
     }
 
     public function delete($id, $model_1, $model_2)
@@ -54,7 +51,6 @@ class Rest extends Api
         $endpoint   = '/app/index.php/'.$model_1.'/'.$model_2.'/api/delete/'.$id;
         $type       = 'DELETE';
         $data       = null;
-        $result     = $this->query($endpoint, $type, $data);
-        return $result;
+        return $this->query($endpoint, $type, $data);
     }
 }

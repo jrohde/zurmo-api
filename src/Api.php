@@ -9,9 +9,9 @@ namespace Zurmo;
 class Api
 {
 
-    public $url;
-    public $username;
-    public $password;
+    protected $url;
+    protected $username;
+    protected $password;
 
     public function __construct($url, $username, $password)
     {
@@ -21,10 +21,9 @@ class Api
     }
 
     /*
-     * Login Function
-     * Authenticates a user for the API
+     * Zurmo API Authentication
     */
-    public function login()
+    private function auth()
     {
         $headers = array(
             'Accept: application/json',
@@ -32,122 +31,81 @@ class Api
             'ZURMO-AUTH-PASSWORD: ' . $this->password,
             'ZURMO-API-REQUEST-TYPE: REST',
         );
-
-        $response = ApiRestHelper::createApiCall($this->url.'/app/index.php/zurmo/api/login', 'POST', $headers);
-        $response = json_decode($response, true);
-        if ($response['status'] == 'SUCCESS') {
-            return $response['data'];
-        } else {
-            return $response;
+        // auth
+        try {
+            $response = json_decode($this->call($this->url.'/app/index.php/zurmo/api/auth', 'POST', $headers), true);
+            if (isset($response['status']) && $response['status'] == 'SUCCESS' && isset($response['sessionId'])) {
+                return $response['data'];
+            } else {
+                throw new Exception($response['errors']);
+            }
+        } catch(Exception $e) {
+            echo 'Caught exception: ',  $e->getMessage(), "\n";
         }
     }
 
     /*
-     * Query API
-     * Queries the API
+     * Zurmo API Query Builder
     */
-    public function query($endpoint, $type, $data)
+    protected function query($endpoint, $type, $data)
     {
-        # Login to API
-        $authenticationData = $this->login();
-
-        # Add code to check if user is logged successfully
-        if(!array_key_exists('sessionId', $authenticationData)) {
-            return var_dump($authenticationData);
-        }
-
-        # Set headers
+        // auth
+        $authenticationData = $this->auth();
+        // prepare headers
         $headers = array(
             'Accept: application/json',
             'ZURMO-SESSION-ID: ' . $authenticationData['sessionId'],
             'ZURMO-TOKEN: ' . $authenticationData['token'],
             'ZURMO-API-REQUEST-TYPE: REST',
         );
-
-        # Make API call
-        $response = ApiRestHelper::createApiCall($this->url.$endpoint, $type, $headers, array('data' => $data));
-        $response = json_decode($response, true);
-
-        # Handle Response
-        if ($response['status'] == 'SUCCESS') {
-            $contact = $response['data'];
-            return $contact;
-            //Do something with contact data
-        } else {
-            // Error
-            $errors = $response['errors'];
-            return $errors;
-            // Do something with errors, show them to user
+        // make the call
+        try {
+            $response = json_decode($this->call($this->url.$endpoint, $type, $headers, array('data' => $data)), true);
+            if (isset($response['status']) && $response['status'] == 'SUCCESS') {
+                return $response['data'];
+            } else {
+                throw new Exception($response['errors']);
+            }
+        } catch (Exception $e) {
+            echo 'Caught exception: ',  $e->getMessage(), "\n";
         }
      }
 
-
- /*
-  * Non-REST functions
-  * All the "standard" REST functions can be accessed using the ZurmoREST class.
-  * These are the oddballs who need special treatment
- */
-
     /*
-     * Contact Attributes
-     * List all the attributes for a particular contact
+     * Zurmo API Caller
     */
-    public function contactAttributes($id)
+    private function call($url, $method, $headers, $data = array())
     {
-        $authenticationData = $this->login();
-        //Add code to check if user is logged successfully
-
-        $headers = array(
-            'Accept: application/json',
-            'ZURMO-SESSION-ID: ' . $authenticationData['sessionId'],
-            'ZURMO-TOKEN: ' . $authenticationData['token'],
-            'ZURMO-API-REQUEST-TYPE: REST',
-        );
-        $response = ApiRestHelper::createApiCall($this->url.'/app/index.php/contacts/contact/api/read/'.$id, 'GET', $headers);
-        // Decode json data
-        #return var_dump($response);
-        $response = json_decode($response, true);
-        if ($response['status'] == 'SUCCESS') {
-            $contactAttributes = $response['data'];
-            return $contactAttributes;
-            //Do something with contact attributes
-        } else {
-            // Error
-            $errors = $response['errors'];
-            return $errors;
-            // Do something with errors
+        if ($method == 'PUT') {
+            $headers[] = 'X-HTTP-Method-Override: PUT';
         }
-    }
 
-    /*
-     * Contact States
-     * List all the available "states" (i.e. status types) for a contact
-    */
-    public function contactStates()
-    {
-        $authenticationData = $this->login();
-        //Add code to check if user is logged successfully
+        $handle = curl_init();
+        curl_setopt($handle, CURLOPT_URL, $url);
+        curl_setopt($handle, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($handle, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($handle, CURLOPT_SSL_VERIFYHOST, false);
+        curl_setopt($handle, CURLOPT_SSL_VERIFYPEER, false);
 
-        $headers = array(
-            'Accept: application/json',
-            'ZURMO-SESSION-ID: ' . $authenticationData['sessionId'],
-            'ZURMO-TOKEN: ' . $authenticationData['token'],
-            'ZURMO-API-REQUEST-TYPE: REST',
-        );
-        $response = ApiRestHelper::createApiCall($this->url.'/app/index.php/contacts/contactState/api/list/', 'GET', $headers);
-        // Decode json data
-        #return var_dump($response);
-        $response = json_decode($response, true);
-
-        if ($response['status'] == 'SUCCESS') {
-            $contactAttributes = $response['data'];
-            return $contactAttributes;
-            //Do something with contact attributes
-        } else {
-            // Error
-            $errors = $response['errors'];
-            return $errors;
-            // Do something with errors
+        switch($method) {
+            case 'GET':
+                break;
+            case 'POST':
+                curl_setopt($handle, CURLOPT_POST, true);
+                curl_setopt($handle, CURLOPT_POSTFIELDS, http_build_query($data));
+                break;
+            case 'PUT':
+                curl_setopt($handle, CURLOPT_CUSTOMREQUEST, 'PUT');
+                curl_setopt($handle, CURLOPT_POSTFIELDS, http_build_query($data));
+                break;
+            case 'DELETE':
+                curl_setopt($handle, CURLOPT_CUSTOMREQUEST, 'DELETE');
+                break;
         }
+        $response = curl_exec($handle);
+        if(curl_errno($handle)) {
+            return 'error:' . curl_error($handle);
+        }
+        return $response;
     }
 }
